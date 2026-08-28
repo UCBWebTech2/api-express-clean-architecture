@@ -1,6 +1,17 @@
 const path = require('path');
 const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const fs = require('fs');
+
+const routesPath = path.join(__dirname, '..', '..', 'interface-adapters', 'routes');
+const routeFiles = fs
+    .readdirSync(routesPath)
+    .filter(file => file.endsWith('.js'))
+    // swagger-jsdoc resuelve estas rutas como patrones glob, que solo entienden
+    // "/" como separador. path.join usa "\" en Windows, lo que hace que no
+    // matchee ningún archivo ahí y Swagger quede sin documentar nada.
+    .map(file => path.join(routesPath, file).split(path.sep).join('/'));
+
 const options = {
     definition: {
         openapi: '3.0.0',
@@ -16,7 +27,7 @@ const options = {
         },
         ],
     },
-    apis: [path.join(__dirname, '..', '..', 'interface-adapters', 'routes', '*.js')], // Rutas donde están los endpoints
+    apis: routeFiles, // Rutas donde están los endpoints
 };
 
 const swaggerSpec = swaggerJSDoc(options);
